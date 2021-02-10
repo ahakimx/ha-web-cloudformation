@@ -296,16 +296,21 @@ Resources:
           Fn::Base64: !Sub |
             #!/bin/bash
             apt-get update -y
-            apt-get install apache2 -y
+            apt-get install apache2 unzip -y
             systemctl start apache2.service
             systemctl enable apache2.service
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            ./aws/install
             cd /var/www/html
+            rm -rf index.html
             aws s3 cp s3://udacity-udagram-apps/udagram.zip .
             unzip udagram.zip
         ImageId: ami-07dd19a7900a1f049
         SecurityGroups:
         - Ref: WebServerSecGroup
         InstanceType: t3.small
+        IamInstanceProfile: !Ref S3InstanceProfile
         BlockDeviceMappings:
         - DeviceName: "/dev/sdk"
           Ebs:
@@ -318,8 +323,8 @@ Resources:
       - Fn::ImportValue: !Sub "${EnvironmentName}-PrivateSubnets"
       LaunchConfigurationName:
         Ref: WebAppLaunchConfig
-      MinSize: '2'
-      MaxSize: '2'
+      MinSize: '4'
+      MaxSize: '6'
       TargetGroupARNs:
       - Ref: WebAppTargetGroup
 
